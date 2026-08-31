@@ -45,6 +45,9 @@ This demonstrates a basic mise workflow with persistent tool data caching.
 2. On launch, the SDK installs the mise snap and configures `MISE_DATA_DIR` to
    point to a persistent host mount.
 
+The SDK pins the mise `latest/stable` revision for each supported architecture.
+Run `scripts/bump-mise-snap.py` to update the shared version and both Store revisions; it fails if amd64 and arm64 no longer publish the same version.
+
 ### Install and use tools
 
 Once the workshop is ready:

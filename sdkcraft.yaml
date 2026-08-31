@@ -1,6 +1,7 @@
 name: mise
 title: mise SDK
 summary: A polyglot tool version manager (asdf compatible)
+version: "2026.8.16"
 description: |
   This SDK provides mise, a polyglot tool version manager for Workshop.
   Mise replaces per-language version managers like asdf, nvm, pyenv, and
@@ -8,18 +9,14 @@ description: |
   host to speed up installs across workshop updates.
 license: MIT
 website: https://github.com/raineszm/mise-sdk
-
 build-base: ubuntu@24.04
-
 platforms:
   amd64:
   arm64:
-
 plugs:
   mise-data:
     interface: mount
     workshop-target: /home/workshop/.local/share/mise
-
 parts:
   mise:
     plugin: nil
