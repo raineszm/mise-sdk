@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+if sudo -iu workshop -- mise --version >/dev/null 2>&1; then
+    workshopctl set-health okay
+else
+    workshopctl set-health --code=mise-version-failed error "mise version check failed"
+fi
