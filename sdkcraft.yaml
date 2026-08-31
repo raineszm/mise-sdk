@@ -1,5 +1,4 @@
 name: mise
-adopt-info: mise
 title: mise SDK
 summary: A polyglot tool version manager (asdf compatible)
 description: |
@@ -24,6 +23,3 @@ plugs:
 parts:
   mise:
     plugin: nil
-    override-pull: |
-      VERSION=$(cat "$CRAFT_PROJECT_DIR/VERSION")
-      craftctl set version="$VERSION"
