@@ -2,12 +2,12 @@
 set -e
 
 case "$(dpkg --print-architecture)" in
-    amd64) revision=207 ;;
-    arm64) revision=208 ;;
-    *)
-        echo "mise SDK does not support this architecture" >&2
-        exit 1
-        ;;
+amd64) revision=207 ;;
+arm64) revision=208 ;;
+*)
+    echo "mise SDK does not support this architecture" >&2
+    exit 1
+    ;;
 esac
 
 snap install mise --classic --revision="$revision"
@@ -15,4 +15,5 @@ snap install mise --classic --revision="$revision"
 cat <<'EOF' >/etc/profile.d/mise.sh
 export PATH="/snap/bin:$PATH"
 export MISE_DATA_DIR="/home/workshop/.local/share/mise"
+eval "$(mise activate bash)"
 EOF
