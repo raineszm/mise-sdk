@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""Update the pinned mise Snap Store version and revisions."""
+"""Update the pinned mise Snap Store revision for every published architecture."""
 
 import json
-import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
-ARCHITECTURES = ("amd64", "arm64")
 STORE_URL = "https://api.snapcraft.io/v2/snaps/info/mise"
 
 
@@ -24,51 +21,53 @@ def store_releases() -> dict[str, tuple[str, int]]:
         for entry in channels
         if entry["channel"]["track"] == "latest"
         and entry["channel"]["risk"] == "stable"
-        and entry["channel"]["architecture"] in ARCHITECTURES
     }
-    if set(releases) != set(ARCHITECTURES):
-        raise ValueError(f"latest/stable missing architectures: {ARCHITECTURES}")
+    if not releases:
+        raise ValueError(f"no latest/stable releases found for {STORE_URL}")
     if len({version for version, _ in releases.values()}) != 1:
         raise ValueError(f"latest/stable versions differ by architecture: {releases}")
     return releases
 
 
-def update_version(version: str) -> None:
-    subprocess.run(
-        [
-            "yq",
-            "--inplace",
-            '.version = strenv(VERSION) | .version style="double"',
-            ROOT / "sdkcraft.yaml",
-        ],
-        check=True,
-        env={**os.environ, "VERSION": version},
+def write_hook(releases: dict[str, tuple[str, int]]) -> None:
+    version = next(iter(releases.values()))[0]
+    arch_cases = "\n".join(
+        f"    {arch}) revision={revision} ;;"
+        for arch, (_, revision) in sorted(releases.items())
     )
-
-
-def replace_once(path: Path, pattern: str, replacement: str) -> None:
+    block = (
+        'case "$(dpkg --print-architecture)" in\n'
+        f"    # pinned mise {version} (latest/stable)\n"
+        f"{arch_cases}\n"
+        "    *)\n"
+        '        echo "mise SDK does not support this architecture" >&2\n'
+        "        exit 1\n"
+        "        ;;\n"
+        "esac"
+    )
+    path = ROOT / "hooks/setup-base"
     content = path.read_text()
-    content, count = re.subn(pattern, replacement, content, count=1, flags=re.MULTILINE)
+    content, count = re.subn(
+        r'case "\$\(dpkg --print-architecture\)" in\n.*?\nesac',
+        block,
+        content,
+        count=1,
+        flags=re.DOTALL,
+    )
     if count != 1:
-        raise ValueError(f"expected one match for {pattern!r} in {path}")
+        raise ValueError(f"could not find the architecture case block in {path}")
     path.write_text(content)
 
 
 def main() -> None:
     releases = store_releases()
-    version = releases["amd64"][0]
-    update_version(version)
-    for architecture, (_, revision) in releases.items():
-        replace_once(
-            ROOT / "hooks/setup-base",
-            rf"^    {architecture}\) revision=\d+ ;;$",
-            f"    {architecture}) revision={revision} ;;",
-        )
+    write_hook(releases)
+    version = next(iter(releases.values()))[0]
     print(
         f"mise {version}: "
         + ", ".join(
-            f"{architecture} revision {releases[architecture][1]}"
-            for architecture in ARCHITECTURES
+            f"{arch} revision {revision}"
+            for arch, (_, revision) in sorted(releases.items())
         )
     )
 

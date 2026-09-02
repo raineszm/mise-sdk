@@ -1,7 +1,8 @@
 name: mise
 title: mise SDK
 summary: A polyglot tool version manager (asdf compatible)
-version: "2026.8.16"
+# SDK's own release version; the pinned mise version lives in hooks/setup-base.
+version: "2026.9.2"
 description: |
   This SDK provides mise, a polyglot tool version manager for Workshop.
   Mise replaces per-language version managers like asdf, nvm, pyenv, and
